@@ -1,0 +1,38 @@
+# Auto-detect text files and normalize to LF
+* text=auto
+
+# Shell scripts should always use LF
+*.sh text eol=lf
+
+# Java source files
+*.java text eol=lf
+
+# Maven/Gradle wrapper scripts
+mvnw text eol=lf
+mvnw.cmd text eol=crlf
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+
+# Properties and YAML
+*.properties text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# HTML, CSS, JS, JSON
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+
+# Ignore binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.gif binary
+*.jar binary
+*.war binary
+
+# Exclude user-uploaded files
+/uploads/** binary
