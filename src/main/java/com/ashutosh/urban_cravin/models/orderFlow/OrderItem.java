@@ -16,21 +16,24 @@ import java.util.UUID;
 public class OrderItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "BINARY(16)")
-    @JdbcTypeCode(SqlTypes.BINARY)
+    @GeneratedValue
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(length = 36, nullable = false)
     private UUID id;
 
+
     @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false, columnDefinition = "BINARY(16)")
+    @JoinColumn(name = "order_id", nullable = false, columnDefinition = "CHAR(36)")
     private Order order;
 
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false, columnDefinition = "BINARY(16)")
+    @JoinColumn(name = "product_id", nullable = false, columnDefinition = "CHAR(36)")
     private Product product;
 
     private Integer quantity;
-    private Double price;
+
+    private Double unitPrice;
+    private Double totalPrice;
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();

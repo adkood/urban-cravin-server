@@ -19,9 +19,9 @@ import java.util.UUID;
 public class ProductImage {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "BINARY(16)")
-    @JdbcTypeCode(SqlTypes.BINARY)
+    @GeneratedValue
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(length = 36, nullable = false)
     private UUID id;
 
     @NotBlank(message = "Image URL is required")
@@ -38,7 +38,7 @@ public class ProductImage {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false, columnDefinition = "BINARY(16)")
+    @JoinColumn(name = "product_id", nullable = false, columnDefinition = "CHAR(36)")
     private Product product;
 
     @PreUpdate

@@ -1,25 +1,10 @@
-package com.ashutosh.urban_cravin.models.users;
+package com.ashutosh.urban_cravin.helpers.dtos.users.request;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import lombok.Data;
 
-import java.util.UUID;
-
-@Entity
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Table(name = "user_addresses")
-public class UserAddress {
-
-    @Id
-    @GeneratedValue
-    @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(length = 36, nullable = false)
-    private UUID id;
+public class UserAddressRequest {
 
 //    @NotBlank(message = "Full name is required")
 //    private String fullName;
@@ -41,8 +26,4 @@ public class UserAddress {
     private String country;
 
     private boolean isDefault = false;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false, columnDefinition = "CHAR(36)")
-    private User user;
 }

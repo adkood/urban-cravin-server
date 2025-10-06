@@ -1,8 +1,16 @@
 services:
   app:
-    build: .
+    build: .          ####      FOR PRODUCTION USE THIS  ####
+#    build:
+#      context: .
+#      dockerfile: Dockerfile.dev  # Use development Dockerfile
     ports:
       - "8080:8080"
+#    volumes:                    #####################   ONLY FOR DEVELOPMENT   ######################################
+#      # Add these lines for live reloading
+#      - .:/app  # Mount entire project directory
+#      - ~/.m2:/root/.m2  # Cache Maven dependencies (optional but recommended)
+#    working_dir: /app  # Set working directory
     depends_on:
       mysql:
         condition: service_healthy
@@ -22,6 +30,8 @@ services:
       SPRING_RABBITMQ_PASSWORD: Cravin@1234
       # Remove this line - it's not a standard Spring property
       # SPRING_DATASOURCE_DRIVER-CLASS-NAME: com.mysql.cj.jdbc.Driver
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_LIVERELOAD_ENABLED: "true"
 
   mysql:
     image: mysql:8
@@ -65,74 +75,27 @@ services:
       timeout: 5s
       retries: 5
 
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - default
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - default
+    depends_on:
+      - prometheus
+
 volumes:
   mysql_data:
-
-#services:
-#  app:
-#    build: .
-#    ports:
-#      - "8080:8080"
-#    depends_on:
-#      mysql:
-#        condition: service_healthy
-#      redis:
-#        condition: service_started
-#      rabbitmq:
-#        condition: service_started
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/urban_cravin_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
-#      SPRING_DATASOURCE_USERNAME: urban_cravin
-#      SPRING_DATASOURCE_PASSWORD: Cravin@1234
-#      SPRING_REDIS_HOST: redis
-#      SPRING_REDIS_PORT: 6379
-#      SPRING_RABBITMQ_HOST: rabbitmq
-#      SPRING_RABBITMQ_PORT: 5672
-#      SPRING_RABBITMQ_USERNAME: urban_cravin
-#      SPRING_RABBITMQ_PASSWORD: Cravin@1234
-#      SPRING_DATASOURCE_DRIVER-CLASS-NAME: com.mysql.cj.jdbc.Driver
-#
-#  mysql:
-#    image: mysql:8
-#    environment:
-#      MYSQL_ROOT_PASSWORD: Cravin@1234
-#      MYSQL_DATABASE: urban_cravin_db
-#      MYSQL_USER: urban_cravin
-#      MYSQL_PASSWORD: Cravin@1234
-#    ports:
-#      - "3307:3306"
-#    volumes:
-#      - mysql_data:/var/lib/mysql
-#    healthcheck:
-#      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 10
-#      start_period: 30s
-#
-#  redis:
-#    image: redis:7
-#    ports:
-#      - "6379:6379"
-#    healthcheck:
-#      test: ["CMD", "redis-cli", "ping"]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#
-#  rabbitmq:
-#    image: rabbitmq:3-management
-#    ports:
-#      - "5672:5672"
-#      - "15672:15672" # Management console
-#    environment:
-#      RABBITMQ_DEFAULT_USER: urban_cravin
-#      RABBITMQ_DEFAULT_PASS: Cravin@1234
-#    healthcheck:
-#      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#
-#volumes:
-#  mysql_data:

@@ -1,0 +1,14 @@
+# Development Dockerfile
+FROM maven:3.9.6-eclipse-temurin-21
+
+WORKDIR /app
+
+# Copy just the POM first to cache dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# DON'T copy src here - it will be mounted via volumes
+# COPY src ./src
+
+# Use this for development (will keep container running)
+CMD ["mvn", "spring-boot:run"]

@@ -1,8 +1,8 @@
-package com.ashutosh.urban_cravin.services;
+package com.ashutosh.urban_cravin.services.users;
 
 import com.ashutosh.urban_cravin.helpers.enums.Role;
 import com.ashutosh.urban_cravin.models.users.User;
-import com.ashutosh.urban_cravin.repositories.UserRepo;
+import com.ashutosh.urban_cravin.repositories.users.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

@@ -23,6 +23,7 @@ public class ProductService {
     @Autowired
     private ProductCategoryRepo productCategoryRepo;
 
+
     public Product addProduct(CreateProductRequest req) {
         if (productRepo.existsBySku(req.getSku())) {
             throw new RuntimeException("Product with SKU already exists");
@@ -35,7 +36,14 @@ public class ProductService {
         product.setName(req.getName());
         product.setDescription(req.getDescription());
         product.setPrice(req.getPrice());
+        product.setDiscountAmount(req.getDiscountAmount());
+        product.setDiscountPercentage(req.getDiscountPercentage());
+        product.setTaxPercentage(req.getTaxPercentage());
+        product.setActive(req.isActive());
         product.setStockQuantity(req.getStockQuantity());
+        product.setWeight(req.getWeight());
+        product.setDimensions(req.getDimensions());
+        product.setSize(req.getSize());
         product.setSku(req.getSku());
         product.setProductCategory(category);
         product.setCreatedAt(LocalDateTime.now());
@@ -44,14 +52,17 @@ public class ProductService {
         return productRepo.save(product);
     }
 
+
     public List<Product> getAllProducts() {
         return productRepo.findAll();
     }
+
 
     public Product getProductById(UUID id) {
         return productRepo.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Product not found with id: " + id));
     }
+
 
     public Product updateProduct(UUID id, UpdateProductRequest req) {
         Product product = getProductById(id);
@@ -59,8 +70,15 @@ public class ProductService {
         if (req.getName() != null) product.setName(req.getName());
         if (req.getDescription() != null) product.setDescription(req.getDescription());
         if (req.getPrice() != null) product.setPrice(req.getPrice());
+        if (req.getDiscountAmount() != null) product.setDiscountAmount(req.getDiscountAmount());
+        if (req.getDiscountPercentage() != null) product.setDiscountPercentage(req.getDiscountPercentage());
+        if (req.getTaxPercentage() != null) product.setTaxPercentage(req.getTaxPercentage());
         if (req.getStockQuantity() != null) product.setStockQuantity(req.getStockQuantity());
+        if (req.getWeight() != null) product.setWeight(req.getWeight());
+        if (req.getDimensions() != null) product.setDimensions(req.getDimensions());
+        if (req.getSize() != null) product.setSize(req.getSize());
         if (req.getActive() != null) product.setActive(req.getActive());
+
         if (req.getSku() != null) {
             // prevent duplicate SKU conflicts
             if (!req.getSku().equals(product.getSku()) && productRepo.existsBySku(req.getSku())) {
@@ -68,8 +86,9 @@ public class ProductService {
             }
             product.setSku(req.getSku());
         }
+
         if (req.getCategoryId() != null) {
-            ProductCategory category = productCategoryRepo.findById(UUID.fromString(req.getCategoryId()))
+            ProductCategory category = productCategoryRepo.findById(req.getCategoryId())
                     .orElseThrow(() -> new NoSuchElementException("Category not found with id: " + req.getCategoryId()));
             product.setProductCategory(category);
         }
@@ -78,6 +97,7 @@ public class ProductService {
 
         return productRepo.save(product);
     }
+
 
     public void deleteProduct(UUID id) {
         Product product = getProductById(id);

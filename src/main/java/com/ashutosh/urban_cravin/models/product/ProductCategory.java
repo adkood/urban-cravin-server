@@ -20,10 +20,11 @@ import java.util.UUID;
 public class ProductCategory {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "BINARY(16)")
-    @JdbcTypeCode(SqlTypes.BINARY)
+    @GeneratedValue
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(length = 36, nullable = false)
     private UUID id;
+
 
     @NotBlank(message = "Category name is required")
     @Size(min = 2, max = 100, message = "Category name must be between 2 and 100 characters")
@@ -49,7 +50,7 @@ public class ProductCategory {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @ManyToOne
-    @JoinColumn(name = "parent_id", columnDefinition = "BINARY(16)")
+    @JoinColumn(name = "parent_id", columnDefinition = "CHAR(36)")
     private ProductCategory parentCategory;
 
     @PreUpdate

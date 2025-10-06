@@ -1,5 +1,6 @@
 package com.ashutosh.urban_cravin.helpers.dtos.product.response;
 
+import com.ashutosh.urban_cravin.helpers.enums.ProductSize;
 import com.ashutosh.urban_cravin.models.product.Product;
 import com.ashutosh.urban_cravin.models.product.ProductImage;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,9 @@ public class ProductResponse {
     private Integer taxPercentage;
     private boolean active;
     private int stockQuantity;
+    private Double weight;
+    private String dimensions;
+    private ProductSize size;
     private String sku;
 
     private ProductCategoryResponse category;
@@ -37,13 +41,8 @@ public class ProductResponse {
                 product.getProductCategory().getSlug()
         );
 
-//        ProductImage primaryImage = product.getImages().stream()
-//                .filter(ProductImage::isPrimaryImage)
-//                .findFirst()
-//                .orElse(null);
-
         List<ProductImageResponse> imageDtos = new ArrayList<>();
-        for(ProductImage img: product.getImages()) {
+        for (ProductImage img : product.getImages()) {
             imageDtos.add(new ProductImageResponse(
                     img.getId(),
                     img.getUrl(),
@@ -62,6 +61,9 @@ public class ProductResponse {
                 product.getTaxPercentage(),
                 product.isActive(),
                 product.getStockQuantity(),
+                product.getWeight(),
+                product.getDimensions(),
+                product.getSize(),
                 product.getSku(),
                 categoryDto,
                 imageDtos

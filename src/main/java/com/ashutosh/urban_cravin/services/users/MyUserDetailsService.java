@@ -1,8 +1,8 @@
-package com.ashutosh.urban_cravin.services;
+package com.ashutosh.urban_cravin.services.users;
 
-import com.ashutosh.urban_cravin.models.UserPrincipal;
+import com.ashutosh.urban_cravin.models.users.UserPrincipal;
 import com.ashutosh.urban_cravin.models.users.User;
-import com.ashutosh.urban_cravin.repositories.UserRepo;
+import com.ashutosh.urban_cravin.repositories.users.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

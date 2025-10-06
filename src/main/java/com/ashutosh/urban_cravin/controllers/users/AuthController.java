@@ -1,12 +1,12 @@
-package com.ashutosh.urban_cravin.controllers;
+package com.ashutosh.urban_cravin.controllers.users;
 
 import com.ashutosh.urban_cravin.helpers.dtos.auth.AuthResponse;
 import com.ashutosh.urban_cravin.helpers.dtos.auth.LoginRequest;
 import com.ashutosh.urban_cravin.helpers.dtos.auth.SignupRequest;
 import com.ashutosh.urban_cravin.helpers.enums.Status;
 import com.ashutosh.urban_cravin.models.users.User;
-import com.ashutosh.urban_cravin.services.AuthService;
-import com.ashutosh.urban_cravin.services.JwtService;
+import com.ashutosh.urban_cravin.services.users.AuthService;
+import com.ashutosh.urban_cravin.services.users.JwtService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

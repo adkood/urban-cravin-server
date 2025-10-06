@@ -1,4 +1,4 @@
-package com.ashutosh.urban_cravin.services;
+package com.ashutosh.urban_cravin.services.users;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;

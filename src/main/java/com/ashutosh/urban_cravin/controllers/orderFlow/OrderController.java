@@ -3,7 +3,7 @@ package com.ashutosh.urban_cravin.controllers.orderFlow;
 import com.ashutosh.urban_cravin.helpers.dtos.ApiResponse;
 import com.ashutosh.urban_cravin.helpers.dtos.orderFlow.CreateCheckoutRequest;
 import com.ashutosh.urban_cravin.helpers.enums.Status;
-import com.ashutosh.urban_cravin.models.UserPrincipal;
+import com.ashutosh.urban_cravin.models.users.UserPrincipal;
 import com.ashutosh.urban_cravin.models.orderFlow.Order;
 import com.ashutosh.urban_cravin.services.orderFlow.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package com.ashutosh.urban_cravin.repositories;
+package com.ashutosh.urban_cravin.repositories.users;
 
 import com.ashutosh.urban_cravin.models.users.User;
 import org.springframework.data.jpa.repository.JpaRepository;

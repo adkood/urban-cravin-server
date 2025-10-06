@@ -17,21 +17,23 @@ import java.util.UUID;
 public class CartItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "BINARY(16)")
-    @JdbcTypeCode(SqlTypes.BINARY)
+    @GeneratedValue
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(length = 36, nullable = false)
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "cart_id", nullable = false, columnDefinition = "BINARY(16)")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cart_id", nullable = false, columnDefinition = "CHAR(36)")
     private Cart cart;
 
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false, columnDefinition = "BINARY(16)")
+    @JoinColumn(name = "product_id", nullable = false, columnDefinition = "CHAR(36)")
     private Product product;
 
     private Integer quantity;
-    private Double price;
+
+    private Double unitPrice;   // per unit price (after discounts + tax)
+    private Double totalPrice;  // unitPrice * quantity
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();

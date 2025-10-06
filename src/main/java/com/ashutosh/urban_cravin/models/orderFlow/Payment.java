@@ -4,6 +4,8 @@ import com.ashutosh.urban_cravin.helpers.enums.PaymentStatus;
 import com.ashutosh.urban_cravin.models.orderFlow.Order;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
 
@@ -13,9 +15,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @Table(name = "payments")
 public class Payment {
-
     @Id
     @GeneratedValue
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(length = 36, nullable = false)
     private UUID id;
 
     @OneToOne

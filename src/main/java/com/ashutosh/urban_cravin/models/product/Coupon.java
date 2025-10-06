@@ -1,4 +1,4 @@
- package com.ashutosh.urban_cravin.models.product;
+package com.ashutosh.urban_cravin.models.product;
 
 import com.ashutosh.urban_cravin.helpers.enums.CouponScope;
 import jakarta.persistence.*;
@@ -21,10 +21,11 @@ import java.util.UUID;
 public class Coupon {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "BINARY(16)")
-    @JdbcTypeCode(SqlTypes.BINARY)
+    @GeneratedValue
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(length = 36, nullable = false)
     private UUID id;
+
 
     @NotBlank
     @Column(unique = true)
@@ -55,12 +56,12 @@ public class Coupon {
 
     // optional; used when scope == PRODUCT
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = true, columnDefinition = "BINARY(16)")
+    @JoinColumn(name = "product_id", nullable = true, columnDefinition = "CHAR(36)")
     private Product product;
 
     // optional; used when scope == CATEGORY
     @ManyToOne
-    @JoinColumn(name = "category_id", nullable = true, columnDefinition = "BiNARY(16)")
+    @JoinColumn(name = "category_id", nullable = true, columnDefinition = "CHAR(36)")
     private ProductCategory category;
 
     @Column(updatable = false, nullable = false)

@@ -1,7 +1,7 @@
 package com.ashutosh.urban_cravin.filters;
 
-import com.ashutosh.urban_cravin.services.JwtService;
-import com.ashutosh.urban_cravin.services.MyUserDetailsService;
+import com.ashutosh.urban_cravin.services.users.JwtService;
+import com.ashutosh.urban_cravin.services.users.MyUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

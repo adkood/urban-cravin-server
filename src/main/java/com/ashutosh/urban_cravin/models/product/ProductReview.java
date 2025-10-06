@@ -20,9 +20,9 @@ import java.util.UUID;
 public class ProductReview {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "BINARY(16)")
-    @JdbcTypeCode(SqlTypes.BINARY)
+    @GeneratedValue
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(length = 36, nullable = false)
     private UUID id;
 
     @NotNull(message = "Rating is required")
@@ -41,6 +41,6 @@ public class ProductReview {
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false, columnDefinition = "BINARY(16)")
+    @JoinColumn(name = "user_id", nullable = false, columnDefinition = "CHAR(36)")
     private User user;  // links to your User entity
 }

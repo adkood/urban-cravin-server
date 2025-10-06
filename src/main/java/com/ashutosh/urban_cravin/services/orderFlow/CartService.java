@@ -3,11 +3,11 @@ package com.ashutosh.urban_cravin.services.orderFlow;
 import com.ashutosh.urban_cravin.models.orderFlow.Cart;
 import com.ashutosh.urban_cravin.models.orderFlow.CartItem;
 import com.ashutosh.urban_cravin.models.product.Product;
-import com.ashutosh.urban_cravin.services.products.CouponService;
 import com.ashutosh.urban_cravin.models.users.User;
-import com.ashutosh.urban_cravin.repositories.UserRepo;
+import com.ashutosh.urban_cravin.repositories.users.UserRepo;
 import com.ashutosh.urban_cravin.repositories.orderFlow.CartRepo;
 import com.ashutosh.urban_cravin.repositories.products.ProductRepo;
+import com.ashutosh.urban_cravin.services.products.CouponService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +27,7 @@ public class CartService {
     private UserRepo userRepo;
 
     @Autowired
-    private CouponService couponService; // not used in addItem but available for future apply
+    private CouponService couponService;
 
     public Cart getCart(UUID userId) {
         return cartRepo.findByUserId(userId)
@@ -48,12 +48,11 @@ public class CartService {
         Product product = productRepo.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        // check stock (optional)
         if (product.getStockQuantity() < qty) {
             throw new RuntimeException("Insufficient stock");
         }
 
-        // check if item exists
+        // Find existing or create new
         CartItem item = cart.getItems().stream()
                 .filter(i -> i.getProduct().getId().equals(productId))
                 .findFirst()
@@ -62,28 +61,27 @@ public class CartService {
                     newItem.setCart(cart);
                     newItem.setProduct(product);
                     newItem.setQuantity(0);
+                    newItem.setUnitPrice(0.0);
+                    newItem.setTotalPrice(0.0);
                     cart.getItems().add(newItem);
                     return newItem;
                 });
 
+        // Update quantity
         item.setQuantity(item.getQuantity() + qty);
 
-        // Compute unit price:
-        // 1) start with product price after developer discount
+        // Calculate unit price
         BigDecimal unitBase = product.getPriceAfterDeveloperDiscount();
-
-        // 2) tax is computed on amount after discounts (developer discount only here)
         BigDecimal taxPerUnit = product.computeTax(unitBase);
-
-        // final per unit price (no user coupon applied in cart add)
         BigDecimal finalUnit = unitBase.add(taxPerUnit);
 
-        item.setPrice(finalUnit.doubleValue()); // store final per unit price
+        item.setUnitPrice(finalUnit.doubleValue());
+        item.setTotalPrice(finalUnit.multiply(BigDecimal.valueOf(item.getQuantity())).doubleValue());
 
-        // compute cart total
+        // Update cart total
         cart.setTotalPrice(
                 cart.getItems().stream()
-                        .mapToDouble(i -> i.getPrice() * i.getQuantity())
+                        .mapToDouble(CartItem::getTotalPrice)
                         .sum()
         );
 
@@ -95,7 +93,7 @@ public class CartService {
         cart.getItems().removeIf(i -> i.getProduct().getId().equals(productId));
         cart.setTotalPrice(
                 cart.getItems().stream()
-                        .mapToDouble(i -> i.getPrice() * i.getQuantity())
+                        .mapToDouble(CartItem::getTotalPrice)
                         .sum()
         );
         return cartRepo.save(cart);

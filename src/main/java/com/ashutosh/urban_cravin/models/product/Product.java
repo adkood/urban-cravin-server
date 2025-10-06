@@ -1,5 +1,6 @@
- package com.ashutosh.urban_cravin.models.product;
+package com.ashutosh.urban_cravin.models.product;
 
+import com.ashutosh.urban_cravin.helpers.enums.ProductSize;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -21,9 +22,9 @@ import java.util.UUID;
 public class Product {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "BINARY(16)")
-    @JdbcTypeCode(SqlTypes.BINARY)
+    @GeneratedValue
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(length = 36, nullable = false)
     private UUID id;
 
     @NotBlank(message = "Product name is required")
@@ -40,12 +41,10 @@ public class Product {
     @DecimalMin(value = "0.0")
     private BigDecimal discountAmount;
 
-    @Min(0)
-    @Max(100)
+    @Min(0) @Max(100)
     private Integer discountPercentage;
 
-    @Min(0)
-    @Max(100)
+    @Min(0) @Max(100)
     private Integer taxPercentage;
 
     private boolean active = true;
@@ -54,7 +53,14 @@ public class Product {
     private int stockQuantity;
 
     private Double weight; // for shipping calc
+
+    @Size(max = 255, message = "Dimensions text too long")
     private String dimensions; // e.g. "10x20x5 cm"
+
+    @NotNull(message = "Size is required")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ProductSize size;
 
     @NotBlank(message = "SKU is required")
     @Column(unique = true)
@@ -70,7 +76,7 @@ public class Product {
     private Long version;  // optimistic locking for stock updates
 
     @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false, columnDefinition = "BINARY(16)")
+    @JoinColumn(name = "category_id", nullable = false, columnDefinition = "CHAR(36)")
     private ProductCategory productCategory;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -79,14 +85,14 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Coupon> coupons;
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductReview> reviews;
+
     @PreUpdate
     public void setUpdatedAt() {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Price after developer/admin discount (but before tax and user coupon).
-     */
     public BigDecimal getPriceAfterDeveloperDiscount() {
         BigDecimal effective = price;
 
@@ -104,18 +110,12 @@ public class Product {
         return effective;
     }
 
-    /**
-     * Compute tax amount for a given taxable amount (rounded as BigDecimal rules you prefer).
-     */
     public BigDecimal computeTax(BigDecimal taxableAmount) {
         if (taxPercentage == null || taxPercentage == 0) return BigDecimal.ZERO;
         return taxableAmount.multiply(BigDecimal.valueOf(taxPercentage))
                 .divide(BigDecimal.valueOf(100));
     }
 
-    /**
-     * Returns final price after dev discount and tax (no user coupon applied).
-     */
     public BigDecimal getFinalPriceWithTax() {
         BigDecimal afterDisc = getPriceAfterDeveloperDiscount();
         BigDecimal tax = computeTax(afterDisc);
