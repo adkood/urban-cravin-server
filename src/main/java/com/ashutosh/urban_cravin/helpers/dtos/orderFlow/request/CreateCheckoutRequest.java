@@ -1,4 +1,4 @@
-package com.ashutosh.urban_cravin.helpers.dtos.orderFlow;
+package com.ashutosh.urban_cravin.helpers.dtos.orderFlow.request;
 
 import lombok.Data;
 

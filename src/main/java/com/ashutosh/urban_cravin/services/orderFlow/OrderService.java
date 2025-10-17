@@ -82,12 +82,12 @@ public class OrderService {
             OrderItem orderItem = createOrderItem(ci, product, coupon, order);
 
             order.getItems().add(orderItem);
-            orderTotal = orderTotal.add(BigDecimal.valueOf(orderItem.getTotalPrice()));
+            orderTotal = orderTotal.add(orderItem.getTotalPrice());
 
             updateProductStock(product, ci.getQuantity());
         }
 
-        order.setTotalPrice(orderTotal.doubleValue());
+        order.setTotalPrice(orderTotal);  // BigDecimal now
         return order;
     }
 
@@ -120,8 +120,8 @@ public class OrderService {
         orderItem.setOrder(order);
         orderItem.setProduct(product);
         orderItem.setQuantity(qty);
-        orderItem.setUnitPrice(finalUnitPrice.doubleValue());
-        orderItem.setTotalPrice(totalPrice.doubleValue());
+        orderItem.setUnitPrice(finalUnitPrice); // BigDecimal
+        orderItem.setTotalPrice(totalPrice);    // BigDecimal
 
         return orderItem;
     }
@@ -133,7 +133,7 @@ public class OrderService {
 
     private void clearCart(Cart cart) {
         cart.getItems().clear();
-        cart.setTotalPrice(0.0);
+        cart.setTotalPrice(BigDecimal.ZERO); // BigDecimal
         cartRepo.save(cart);
     }
 

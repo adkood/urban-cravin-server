@@ -1,9 +1,12 @@
 package com.ashutosh.urban_cravin.services.products;
 
+import com.ashutosh.urban_cravin.helpers.dtos.product.request.CreateCouponRequest;
 import com.ashutosh.urban_cravin.helpers.enums.CouponScope;
 import com.ashutosh.urban_cravin.models.product.Coupon;
 import com.ashutosh.urban_cravin.models.product.Product;
+import com.ashutosh.urban_cravin.models.product.ProductCategory;
 import com.ashutosh.urban_cravin.repositories.products.CouponRepo;
+import com.ashutosh.urban_cravin.repositories.products.ProductCategoryRepo;
 import com.ashutosh.urban_cravin.repositories.products.ProductRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,19 +25,39 @@ public class CouponService {
     @Autowired
     private ProductRepo productRepo;
 
-    public Coupon addCoupon(Coupon coupon, UUID productId) {
-        if (couponRepo.existsByCode(coupon.getCode())) {
+    @Autowired
+    private ProductCategoryRepo categoryRepo;
+
+    public Coupon addCoupon(CreateCouponRequest req) {
+        if (couponRepo.existsByCode(req.getCode())) {
             throw new RuntimeException("Coupon code already exists");
         }
 
-        if (productId != null) {
-            Product product = productRepo.findById(productId)
+        Coupon coupon = new Coupon();
+        coupon.setCode(req.getCode());
+        coupon.setDiscountAmount(req.getDiscountAmount());
+        coupon.setDiscountPercentage(req.getDiscountPercentage());
+        coupon.setValidFrom(req.getValidFrom());
+        coupon.setValidUntil(req.getValidUntil());
+        coupon.setActive(req.isActive());
+        coupon.setUsageLimit(req.getUsageLimit());
+        coupon.setScope(req.getScope());
+
+        if (req.getProductId() != null) {
+            Product product = productRepo.findById(req.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found"));
             coupon.setProduct(product);
         }
 
+        if (req.getCategoryId() != null) {
+            ProductCategory category = categoryRepo.findById(req.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            coupon.setCategory(category);
+        }
+
         return couponRepo.save(coupon);
     }
+
 
     public List<Coupon> getAllCoupons() {
         return couponRepo.findAll();

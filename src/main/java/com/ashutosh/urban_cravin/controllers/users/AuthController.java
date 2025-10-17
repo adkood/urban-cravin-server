@@ -1,8 +1,8 @@
 package com.ashutosh.urban_cravin.controllers.users;
 
-import com.ashutosh.urban_cravin.helpers.dtos.auth.AuthResponse;
-import com.ashutosh.urban_cravin.helpers.dtos.auth.LoginRequest;
-import com.ashutosh.urban_cravin.helpers.dtos.auth.SignupRequest;
+import com.ashutosh.urban_cravin.helpers.dtos.auth.response.AuthResponse;
+import com.ashutosh.urban_cravin.helpers.dtos.auth.request.LoginRequest;
+import com.ashutosh.urban_cravin.helpers.dtos.auth.request.SignupRequest;
 import com.ashutosh.urban_cravin.helpers.enums.Status;
 import com.ashutosh.urban_cravin.models.users.User;
 import com.ashutosh.urban_cravin.services.users.AuthService;

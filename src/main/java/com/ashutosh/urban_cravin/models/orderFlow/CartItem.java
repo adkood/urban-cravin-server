@@ -6,6 +6,7 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -32,8 +33,11 @@ public class CartItem {
 
     private Integer quantity;
 
-    private Double unitPrice;   // per unit price (after discounts + tax)
-    private Double totalPrice;  // unitPrice * quantity
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal unitPrice;   // per unit price (after discounts + tax)
+
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal totalPrice;  // unitPrice * quantity
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();

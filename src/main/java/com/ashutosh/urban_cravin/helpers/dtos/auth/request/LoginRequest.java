@@ -1,4 +1,4 @@
-package com.ashutosh.urban_cravin.helpers.dtos.auth;
+package com.ashutosh.urban_cravin.helpers.dtos.auth.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

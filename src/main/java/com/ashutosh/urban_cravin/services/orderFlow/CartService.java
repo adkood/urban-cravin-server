@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Iterator;
 import java.util.UUID;
 
 @Service
@@ -37,6 +38,7 @@ public class CartService {
 
                     Cart cart = new Cart();
                     cart.setUser(user);
+                    cart.setTotalPrice(BigDecimal.ZERO);
                     return cartRepo.save(cart);
                 });
     }
@@ -52,7 +54,7 @@ public class CartService {
             throw new RuntimeException("Insufficient stock");
         }
 
-        // Find existing or create new
+        // Find existing item or create new
         CartItem item = cart.getItems().stream()
                 .filter(i -> i.getProduct().getId().equals(productId))
                 .findFirst()
@@ -61,8 +63,8 @@ public class CartService {
                     newItem.setCart(cart);
                     newItem.setProduct(product);
                     newItem.setQuantity(0);
-                    newItem.setUnitPrice(0.0);
-                    newItem.setTotalPrice(0.0);
+                    newItem.setUnitPrice(BigDecimal.ZERO);
+                    newItem.setTotalPrice(BigDecimal.ZERO);
                     cart.getItems().add(newItem);
                     return newItem;
                 });
@@ -71,31 +73,49 @@ public class CartService {
         item.setQuantity(item.getQuantity() + qty);
 
         // Calculate unit price
-        BigDecimal unitBase = product.getPriceAfterDeveloperDiscount();
-        BigDecimal taxPerUnit = product.computeTax(unitBase);
+        BigDecimal unitBase = product.getPriceAfterDeveloperDiscount(); // already BigDecimal
+        BigDecimal taxPerUnit = product.computeTax(unitBase);           // BigDecimal
         BigDecimal finalUnit = unitBase.add(taxPerUnit);
 
-        item.setUnitPrice(finalUnit.doubleValue());
-        item.setTotalPrice(finalUnit.multiply(BigDecimal.valueOf(item.getQuantity())).doubleValue());
+        item.setUnitPrice(finalUnit);
+        item.setTotalPrice(finalUnit.multiply(BigDecimal.valueOf(item.getQuantity())));
 
         // Update cart total
-        cart.setTotalPrice(
-                cart.getItems().stream()
-                        .mapToDouble(CartItem::getTotalPrice)
-                        .sum()
-        );
+        BigDecimal cartTotal = cart.getItems().stream()
+                .map(CartItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        cart.setTotalPrice(cartTotal);
 
         return cartRepo.save(cart);
     }
 
     public Cart removeItem(UUID userId, UUID productId) {
         Cart cart = getCart(userId);
-        cart.getItems().removeIf(i -> i.getProduct().getId().equals(productId));
-        cart.setTotalPrice(
-                cart.getItems().stream()
-                        .mapToDouble(CartItem::getTotalPrice)
-                        .sum()
-        );
+
+        Iterator<CartItem> iterator = cart.getItems().iterator();
+        while (iterator.hasNext()) {
+            CartItem item = iterator.next();
+            if (item.getProduct().getId().equals(productId)) {
+                if (item.getQuantity() > 1) {
+                    item.setQuantity(item.getQuantity() - 1);
+
+                    // Recalculate totalPrice for this item
+                    BigDecimal unitPrice = item.getUnitPrice();
+                    item.setTotalPrice(unitPrice.multiply(BigDecimal.valueOf(item.getQuantity())));
+                } else {
+                    iterator.remove(); // safely remove item
+                }
+                break;
+            }
+        }
+
+        // Recalculate cart total (BigDecimal)
+        BigDecimal cartTotal = cart.getItems().stream()
+                .map(CartItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        cart.setTotalPrice(cartTotal);
+
         return cartRepo.save(cart);
     }
 }

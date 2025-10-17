@@ -1,4 +1,4 @@
-package com.ashutosh.urban_cravin.helpers.dtos.auth;
+package com.ashutosh.urban_cravin.helpers.dtos.auth.response;
 
 import com.ashutosh.urban_cravin.helpers.enums.Status;
 import lombok.AllArgsConstructor;

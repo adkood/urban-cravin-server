@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -32,8 +33,11 @@ public class OrderItem {
 
     private Integer quantity;
 
-    private Double unitPrice;
-    private Double totalPrice;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal unitPrice;
+
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal totalPrice;
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();

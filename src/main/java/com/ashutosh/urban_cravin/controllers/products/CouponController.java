@@ -1,9 +1,11 @@
 package com.ashutosh.urban_cravin.controllers.products;
 
 import com.ashutosh.urban_cravin.helpers.dtos.ApiResponse;
+import com.ashutosh.urban_cravin.helpers.dtos.product.request.CreateCouponRequest;
 import com.ashutosh.urban_cravin.helpers.enums.Status;
 import com.ashutosh.urban_cravin.models.product.Coupon;
 import com.ashutosh.urban_cravin.services.products.CouponService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,10 +22,11 @@ public class CouponController {
     private CouponService couponService;
 
     @PostMapping("/")
-    public ResponseEntity<ApiResponse> createCoupon(@RequestBody Coupon coupon,
-                                                    @RequestParam(required = false) UUID productId) {
-        Coupon created = couponService.addCoupon(coupon, productId);
-        return ResponseEntity.ok(new ApiResponse(Status.Success, "Coupon created", Map.of("coupon", created)));
+    public ResponseEntity<ApiResponse> createCoupon(@RequestBody @Valid CreateCouponRequest request) {
+        Coupon created = couponService.addCoupon(request);
+        return ResponseEntity.ok(
+                new ApiResponse(Status.Success, "Coupon created", Map.of("coupon", created))
+        );
     }
 
     @GetMapping("/")
