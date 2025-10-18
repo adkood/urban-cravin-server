@@ -3,6 +3,7 @@ package com.ashutosh.urban_cravin.helpers.utils;
 import com.ashutosh.urban_cravin.helpers.enums.PaymentIntentStatus;
 import com.ashutosh.urban_cravin.models.payment.PaymentIntent;
 import com.ashutosh.urban_cravin.repositories.payment.PaymentIntentRepo;
+import com.ashutosh.urban_cravin.services.payment.PhonePeAuthService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -22,28 +23,30 @@ public class PaymentReconciliationScheduler {
     private final PaymentIntentRepo intentRepo;
     private final WebClient phonePeWebClient;
     private final ObjectMapper objectMapper;
+    private final PhonePeAuthService authService;
 
-    @Value("${phonepe.merchant-id}")
-    private String merchantId;
+    @Value("${phonepe.client-id}")
+    private String clientId;
 
-    @Value("${phonepe.api-key}")
-    private String apiKey;
+    @Value("${phonepe.client-secret}")
+    private String clientSecret;
 
     @Value("${phonepe.key-index}")
     private String keyIndex;
 
     public PaymentReconciliationScheduler(PaymentIntentRepo intentRepo,
                                           WebClient phonePeWebClient,
-                                          ObjectMapper objectMapper) {
+                                          ObjectMapper objectMapper,
+                                          PhonePeAuthService authService) {
         this.intentRepo = intentRepo;
         this.phonePeWebClient = phonePeWebClient;
         this.objectMapper = objectMapper;
+        this.authService = authService;
     }
 
     @Scheduled(fixedDelayString = "PT5M")
     public void reconcile() {
         try {
-            // Find pending payments older than 10 minutes
             LocalDateTime threshold = LocalDateTime.now().minusMinutes(10);
             List<PaymentIntent> pendingPayments = intentRepo
                     .findByStatusInAndCreatedAtBefore(
@@ -56,8 +59,7 @@ public class PaymentReconciliationScheduler {
             for (PaymentIntent intent : pendingPayments) {
                 try {
                     checkPaymentStatus(intent);
-                    // Small delay to avoid rate limiting
-                    Thread.sleep(1000);
+                    Thread.sleep(1000); // Rate limiting
                 } catch (Exception e) {
                     log.error("Failed to check status for payment: {}", intent.getMerchantTransactionId(), e);
                 }
@@ -72,16 +74,18 @@ public class PaymentReconciliationScheduler {
     private void checkPaymentStatus(PaymentIntent intent) {
         try {
             String merchantTransactionId = intent.getMerchantTransactionId();
-            String apiPath = "/pg/v1/status/" + merchantId + "/" + merchantTransactionId;
+            String apiPath = "/apis/pg-sandbox/pg/v1/status/" + clientId + "/" + merchantTransactionId;
 
-            // Generate checksum for status API
-            String checksumInput = apiPath + apiKey;
-            String xVerify = PhonePeChecksum.buildXVerify("", apiPath, apiKey, keyIndex);
+            // Generate checksum
+            String xVerify = PhonePeChecksum.buildXVerify("", apiPath, clientSecret, keyIndex);
+
+            // Get OAuth token
+            String accessToken = authService.getAccessToken();
 
             String responseJson = phonePeWebClient.get()
                     .uri(apiPath)
+                    .header("Authorization", accessToken)
                     .header("X-VERIFY", xVerify)
-                    .header("X-MERCHANT-ID", merchantId)
                     .header("Content-Type", "application/json")
                     .retrieve()
                     .bodyToMono(String.class)
@@ -91,7 +95,6 @@ public class PaymentReconciliationScheduler {
             String code = response.path("code").asText();
             String state = response.path("data").path("state").asText();
 
-            // Update payment status based on response
             PaymentIntentStatus newStatus = mapStatusFromState(state);
             if (newStatus != intent.getStatus()) {
                 intent.setStatus(newStatus);
@@ -103,9 +106,8 @@ public class PaymentReconciliationScheduler {
                 }
 
                 intentRepo.save(intent);
-                log.info("Payment status updated: {} -> {}", merchantTransactionId, newStatus);
+                log.info("Payment status updated via reconciliation: {} -> {}", merchantTransactionId, newStatus);
 
-                // Trigger business logic for successful payments
                 if (newStatus == PaymentIntentStatus.SUCCESS) {
                     triggerPostPaymentActions(intent);
                 }
@@ -128,13 +130,12 @@ public class PaymentReconciliationScheduler {
 
     private void triggerPostPaymentActions(PaymentIntent intent) {
         try {
-            // TODO: Implement your business logic here
-            // - Update order status
-            // - Send confirmation email
-            // - Trigger inventory update
-            // - Notify other services
-
+            // Implement your business logic here
             log.info("Triggering post-payment actions for: {}", intent.getMerchantTransactionId());
+
+            // Example:
+            // orderService.updateOrderStatus(intent.getOrderId(), OrderStatus.PAID);
+            // emailService.sendPaymentConfirmation(intent.getUserId(), intent);
 
         } catch (Exception e) {
             log.error("Failed to trigger post-payment actions for: {}", intent.getMerchantTransactionId(), e);

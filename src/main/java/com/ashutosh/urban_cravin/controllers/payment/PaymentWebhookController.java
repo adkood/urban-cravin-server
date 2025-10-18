@@ -28,7 +28,7 @@ public class PaymentWebhookController {
     private final PaymentIntentRepo intentRepo;
     private final ObjectMapper objectMapper;
 
-    @Value("${phonepe.api-key}")
+    @Value("${phonepe.client-secret}")
     private String apiKey;
 
     @Value("${phonepe.key-index}")
@@ -126,7 +126,6 @@ public class PaymentWebhookController {
             return switch (state.toUpperCase()) {
                 case "COMPLETED", "SUCCESS" -> PaymentIntentStatus.SUCCESS;
                 case "FAILED", "ERROR", "DECLINED" -> PaymentIntentStatus.FAILED;
-                case "PENDING" -> PaymentIntentStatus.PENDING;
                 case "REFUNDED" -> PaymentIntentStatus.REFUNDED;
                 default -> PaymentIntentStatus.PENDING;
             };
@@ -136,7 +135,6 @@ public class PaymentWebhookController {
         return switch (code) {
             case "PAYMENT_SUCCESS" -> PaymentIntentStatus.SUCCESS;
             case "PAYMENT_ERROR", "PAYMENT_DECLINED" -> PaymentIntentStatus.FAILED;
-            case "PAYMENT_PENDING" -> PaymentIntentStatus.PENDING;
             default -> PaymentIntentStatus.PENDING;
         };
     }

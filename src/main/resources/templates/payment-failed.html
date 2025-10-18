@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Payment Failed</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 100px; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+<div class="error">
+    <h1>❌ Payment Failed</h1>
+    <p>We're sorry, but your payment could not be processed.</p>
+    <p th:if="${code}"><strong>Error Code:</strong> <span th:text="${code}"></span></p>
+</div>
+<button onclick="window.history.back()">Try Again</button>
+<a href="/">Return to Home</a>
+</body>
+</html>

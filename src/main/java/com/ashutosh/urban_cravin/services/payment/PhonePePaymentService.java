@@ -28,17 +28,18 @@ public class PhonePePaymentService {
 
     private static final Logger log = LoggerFactory.getLogger(PhonePePaymentService.class);
 
+    private final PhonePeAuthService authService;
     private final WebClient phonePeWebClient;
     private final PaymentIntentRepo intentRepo;
     private final ObjectMapper objectMapper;
     private final Retry retry;
     private final CircuitBreaker cb;
 
-    @Value("${phonepe.merchant-id}")
-    private String merchantId;
+    @Value("${phonepe.client-id}")
+    private String clientId;
 
-    @Value("${phonepe.api-key}")
-    private String apiKey;
+    @Value("${phonepe.client-secret}")
+    private String clientSecret;
 
     @Value("${phonepe.key-index}")
     private String keyIndex;
@@ -52,11 +53,13 @@ public class PhonePePaymentService {
     @Value("${phonepe.base-url}")
     private String baseUrl;
 
-    public PhonePePaymentService(WebClient phonePeWebClient,
+    public PhonePePaymentService(PhonePeAuthService authService,
+                                 WebClient phonePeWebClient,
                                  PaymentIntentRepo intentRepo,
                                  ObjectMapper objectMapper,
                                  RetryRegistry retryRegistry,
                                  CircuitBreakerRegistry cbRegistry) {
+        this.authService = authService;
         this.phonePeWebClient = phonePeWebClient;
         this.intentRepo = intentRepo;
         this.objectMapper = objectMapper;
@@ -94,6 +97,7 @@ public class PhonePePaymentService {
         PaymentIntent intent = PaymentIntent.builder()
                 .merchantTransactionId(merchantTxnId)
                 .userId(req.getUserId())
+                .orderId(req.getOrderId())
                 .amount(req.getAmount().multiply(BigDecimal.valueOf(100))) // Convert to paise
                 .status(PaymentIntentStatus.INITIATED)
                 .build();
@@ -106,19 +110,25 @@ public class PhonePePaymentService {
         intent = intentRepo.save(intent);
 
         try {
-            // Prepare API call
-            String apiPath = "/pg/v1/pay";
-            String xVerify = PhonePeChecksum.buildXVerify(jsonPayload, apiPath, apiKey, keyIndex);
+            // Prepare API call - Business API uses OAuth + checksum
+            String apiPath = "/apis/pg-sandbox/pg/v1/pay";
+
+            // Generate checksum
+            String xVerify = PhonePeChecksum.buildXVerify(jsonPayload, apiPath, clientSecret, keyIndex);
             String base64Payload = Base64.getEncoder()
                     .encodeToString(jsonPayload.getBytes(StandardCharsets.UTF_8));
 
             Map<String, String> requestBody = Map.of("request", base64Payload);
 
+            // Get OAuth token
+            String accessToken = authService.getAccessToken();
+
             log.info("Initiating payment with merchantTxnId: {}", merchantTxnId);
 
-            // Make API call
+            // Make API call with both OAuth and checksum
             String responseJson = phonePeWebClient.post()
                     .uri(apiPath)
+                    .header("Authorization", accessToken)
                     .header("X-VERIFY", xVerify)
                     .header("Content-Type", "application/json")
                     .bodyValue(requestBody)
@@ -126,9 +136,9 @@ public class PhonePePaymentService {
                     .bodyToMono(String.class)
                     .block();
 
-            log.debug("PhonePe API response: {}", responseJson);
+            log.debug("PhonePe Business API response: {}", responseJson);
 
-            // Parse response using JsonNode for flexibility
+            // Parse response
             JsonNode response = objectMapper.readTree(responseJson);
 
             boolean success = response.path("success").asBoolean();
@@ -140,13 +150,14 @@ public class PhonePePaymentService {
                 intent.setLastResponse(responseJson);
 
                 // Extract redirect URL from response
-                String redirectUrl = extractRedirectUrl(response);
+                String extractedRedirectUrl = extractRedirectUrl(response);
 
-                if (redirectUrl != null) {
+                if (extractedRedirectUrl != null && !extractedRedirectUrl.isEmpty()) {
                     intentRepo.save(intent);
-                    return new PaymentInitiateResponse(merchantTxnId, redirectUrl, PaymentIntentStatus.PENDING);
+                    return new PaymentInitiateResponse(merchantTxnId, extractedRedirectUrl, PaymentIntentStatus.PENDING);
                 } else {
                     log.warn("Redirect URL not found in response for merchantTxnId: {}", merchantTxnId);
+                    throw new RuntimeException("Redirect URL not provided by payment gateway");
                 }
             }
 
@@ -174,30 +185,29 @@ public class PhonePePaymentService {
 
     private String extractRedirectUrl(JsonNode response) {
         try {
-            // Try different possible paths for redirect URL
             JsonNode data = response.path("data");
 
-            // Path 1: data.instrumentResponse.redirectInfo.url
-            JsonNode redirectInfo = data.path("instrumentResponse").path("redirectInfo");
-            if (!redirectInfo.isMissingNode() && redirectInfo.has("url")) {
-                return redirectInfo.path("url").asText();
+            // Business API response structure
+            if (data.has("instrumentResponse")) {
+                JsonNode instrumentResponse = data.path("instrumentResponse");
+
+                if (instrumentResponse.has("redirectInfo")) {
+                    JsonNode redirectInfo = instrumentResponse.path("redirectInfo");
+                    if (redirectInfo.has("url")) {
+                        return redirectInfo.path("url").asText();
+                    }
+                }
+
+                // Fallback: check if redirectInfo is a string containing URL
+                String redirectInfoStr = instrumentResponse.path("redirectInfo").asText();
+                if (redirectInfoStr.contains("http")) {
+                    return redirectInfoStr;
+                }
             }
 
-            // Path 2: data.instrumentResponse.redirectInfo
-            String redirectInfoStr = data.path("instrumentResponse").path("redirectInfo").asText();
-            if (!redirectInfoStr.isEmpty() && redirectInfoStr.contains("url=")) {
-                return redirectInfoStr.substring(redirectInfoStr.indexOf("url=") + 4);
-            }
-
-            // Path 3: data.instrumentResponse (direct URL)
-            String instrumentResponse = data.path("instrumentResponse").asText();
-            if (!instrumentResponse.isEmpty()) {
-                return instrumentResponse;
-            }
-
-            // Path 4: Check if URL is directly in data
-            if (data.has("url")) {
-                return data.path("url").asText();
+            // Alternative path
+            if (data.has("redirectUrl")) {
+                return data.path("redirectUrl").asText();
             }
 
             return null;
@@ -209,9 +219,9 @@ public class PhonePePaymentService {
 
     private Map<String, Object> buildPhonePePayload(String merchantTxnId, CreatePaymentRequest req) {
         Map<String, Object> payload = new HashMap<>();
-        payload.put("merchantId", merchantId);
+        payload.put("merchantId", clientId);  // Use clientId as merchantId
         payload.put("merchantTransactionId", merchantTxnId);
-        payload.put("amount", req.getAmount().multiply(BigDecimal.valueOf(100)).longValue()); // in paise
+        payload.put("amount", req.getAmount().multiply(BigDecimal.valueOf(100)).longValue());
         payload.put("redirectUrl", redirectUrl);
         payload.put("redirectMode", "REDIRECT");
         payload.put("callbackUrl", callbackUrl);
@@ -221,7 +231,6 @@ public class PhonePePaymentService {
             payload.put("mobileNumber", req.getMobile());
         }
 
-        // Add merchant user ID if available
         if (req.getUserId() != null) {
             payload.put("merchantUserId", req.getUserId().toString());
         }
@@ -230,7 +239,6 @@ public class PhonePePaymentService {
     }
 
     private PaymentInitiateResponse buildResponseFromIntent(PaymentIntent intent) {
-        // For existing intents, check if we have a redirect URL in lastResponse
         String redirectUrl = "";
         try {
             if (intent.getLastResponse() != null) {

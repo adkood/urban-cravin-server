@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Payment Success</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 100px; }
+        .success { color: green; }
+        .details { background: #f8f9fa; padding: 20px; margin: 20px auto; max-width: 500px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+<div class="success">
+    <h1>✅ Payment Successful!</h1>
+    <p>Thank you for your payment. Your order is being processed.</p>
+
+    <div class="details" th:if="${transactionId}">
+        <p><strong>Transaction ID:</strong> <span th:text="${transactionId}"></span></p>
+        <p><strong>Merchant Transaction ID:</strong> <span th:text="${merchantTransactionId}"></span></p>
+    </div>
+</div>
+<a href="/">Return to Home</a>
+</body>
+</html>

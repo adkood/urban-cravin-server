@@ -25,13 +25,13 @@ server:
 
 # PhonePe Configuration
 phonepe:
-  merchant-id: YOUR_MERCHANT_ID
-  api-key: YOUR_SALT_KEY  # This is your Salt Key from PhonePe dashboard
+  client-id: TEST-M22H10UQ7LCDE_25101
+  client-secret: MTgyMzQxYWMtMzFhNi00NmRlLWEyMTctYTYxNjc2NmU5YTY1
   key-index: 1
   redirect-url: http://localhost:8080/payment/redirect
   callback-url: http://localhost:8080/api/payments/webhook
-  base-url: https://api.phonepe.com  # For production
-  # base-url: https://api-preprod.phonepe.com  # For sandbox/testing
+  base-url: https://api-preprod.phonepe.com  # For sandbox/testing
+#  base-url: https://api.phonepe.com  # For production
 
 # JWT Configuration
 jwt:
